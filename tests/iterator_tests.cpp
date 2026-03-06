@@ -4,7 +4,7 @@
 #include "RingBuffer.hpp"
 
 void iterator_basic() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -18,7 +18,7 @@ void iterator_basic() {
 }
 
 void iterator_wraparound() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -38,7 +38,7 @@ void iterator_wraparound() {
 }
 
 void const_iteration() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(10);
   rb.push(20);
@@ -53,7 +53,7 @@ void const_iteration() {
 }
 
 void range_loop_modify() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -69,7 +69,7 @@ void range_loop_modify() {
 }
 
 void iterator_boundary() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -85,7 +85,7 @@ void iterator_boundary() {
 }
 
 void reverse_iteration() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -101,7 +101,7 @@ void reverse_iteration() {
 }
 
 void empty_iteration() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   assert(rb.begin() == rb.end());
   int count = 0;
@@ -113,7 +113,7 @@ void empty_iteration() {
 }
 
 void iterator_decrement_wrap() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -137,13 +137,21 @@ void iterator_decrement_wrap() {
 }
 
 int main() {
+  std::cout << "Test " << 1 << '\n';
   iterator_basic();
+  std::cout << "Test " << 2 << '\n';
   iterator_wraparound();
+  std::cout << "Test " << 3 << '\n';
   const_iteration();
+  std::cout << "Test " << 4 << '\n';
   range_loop_modify();
+  std::cout << "Test " << 5 << '\n';
   iterator_boundary();
+  std::cout << "Test " << 6 << '\n';
   reverse_iteration();
+  std::cout << "Test " << 7 << '\n';
   empty_iteration();
+  std::cout << "Test " << 8 << '\n';
   iterator_decrement_wrap();
 
   std::cout << "Iterator correctness tests passed\n";

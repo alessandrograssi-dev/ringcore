@@ -4,7 +4,7 @@
 #include "RingBuffer.hpp"
 
 void basic_push_pop() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   assert(rb.empty());
   assert(!rb.is_full());
@@ -28,16 +28,25 @@ void basic_push_pop() {
 }
 
 void push_overflow() {
-  RingBuffer<int, 2> rb;
+  RingBuffer<int, 4> rb;
 
-  assert(rb.push(1));
-  assert(rb.push(2));
-  assert(!rb.push(3));
-  assert(rb.size() == 2);
+  rb.push(1);
+  rb.push(2);
+  rb.push(3);
+
+  bool thrown = false;
+  try {
+    rb.push(4);
+  } catch (const std::out_of_range&) {
+    thrown = true;
+  }
+
+  assert(thrown);
+  assert(rb.size() == 3);
 }
 
 void pop_empty() {
-  RingBuffer<int, 2> rb;
+  RingBuffer<int, 4> rb;
   bool thrown = false;
   try {
     rb.pop();
@@ -48,7 +57,7 @@ void pop_empty() {
 }
 
 void peek_front_back() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(10);
   rb.push(20);
@@ -63,7 +72,7 @@ void peek_front_back() {
 }
 
 void wraparound_push_pop() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -83,7 +92,7 @@ void wraparound_push_pop() {
 }
 
 void clear_test() {
-  RingBuffer<int, 4> rb;
+  RingBuffer<int, 8> rb;
 
   rb.push(1);
   rb.push(2);
@@ -97,7 +106,7 @@ void clear_test() {
 }
 
 void stress_cycles() {
-  RingBuffer<int, 4> rb;
+  RingBuffer<int, 8> rb;
 
   for (int i = 0; i < 10000; ++i) {
     rb.push(i);
@@ -108,7 +117,7 @@ void stress_cycles() {
 }
 
 void index_wraparound() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -125,7 +134,7 @@ void index_wraparound() {
 }
 
 void back_wraparound_edge() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -138,7 +147,7 @@ void back_wraparound_edge() {
 }
 
 void emplace_front_basic() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.emplace_front(1);
   rb.emplace_front(2);
@@ -150,7 +159,7 @@ void emplace_front_basic() {
 }
 
 void emplace_front_wraparound() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(1);
   rb.push(2);
@@ -166,7 +175,7 @@ void emplace_front_wraparound() {
 }
 
 void at_valid() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(10);
   rb.push(20);
@@ -176,7 +185,7 @@ void at_valid() {
 }
 
 void at_out_of_range() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(10);
 
@@ -192,8 +201,8 @@ void at_out_of_range() {
 }
 
 void swap_test() {
-  RingBuffer<int, 3> a;
-  RingBuffer<int, 3> b;
+  RingBuffer<int, 4> a;
+  RingBuffer<int, 4> b;
 
   a.push(1);
   a.push(2);
@@ -209,13 +218,13 @@ void swap_test() {
 }
 
 void max_size_test() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
 
-  assert(rb.max_size() == 5);
+  assert(rb.max_size() == 7);
 }
 
 void index_access() {
-  RingBuffer<int, 3> rb;
+  RingBuffer<int, 4> rb;
 
   rb.push(5);
   rb.push(6);
@@ -227,21 +236,37 @@ void index_access() {
 }
 
 int main() {
+  std::cout << "Test " << 1 << '\n';
   basic_push_pop();
+  std::cout << "Test " << 2 << '\n';
   push_overflow();
+  std::cout << "Test " << 3 << '\n';
   pop_empty();
+  std::cout << "Test " << 4 << '\n';
   peek_front_back();
+  std::cout << "Test " << 5 << '\n';
   wraparound_push_pop();
+  std::cout << "Test " << 6 << '\n';
   clear_test();
+  std::cout << "Test " << 7 << '\n';
   stress_cycles();
+  std::cout << "Test " << 8 << '\n';
   index_wraparound();
+  std::cout << "Test " << 9 << '\n';
   back_wraparound_edge();
+  std::cout << "Test " << 10 << '\n';
   emplace_front_basic();
+  std::cout << "Test " << 11 << '\n';
   emplace_front_wraparound();
+  std::cout << "Test " << 12 << '\n';
   at_valid();
+  std::cout << "Test " << 13 << '\n';
   at_out_of_range();
+  std::cout << "Test " << 14 << '\n';
   swap_test();
+  std::cout << "Test " << 15 << '\n';
   max_size_test();
+  std::cout << "Test " << 16 << '\n';
   index_access();
 
   std::cout << "Container behavior tests passed\n";

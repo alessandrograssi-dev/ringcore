@@ -8,7 +8,7 @@
 #include "RingBuffer.hpp"
 
 void copy_algorithm() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   rb.push(1);
   rb.push(2);
   rb.push(3);
@@ -22,7 +22,7 @@ void copy_algorithm() {
 }
 
 void distance_algorithm() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   rb.push(10);
   rb.push(20);
   rb.push(30);
@@ -32,7 +32,7 @@ void distance_algorithm() {
 }
 
 void accumulate_algorithm() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   rb.push(1);
   rb.push(2);
   rb.push(3);
@@ -42,7 +42,7 @@ void accumulate_algorithm() {
 }
 
 void find_algorithm() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   rb.push(1);
   rb.push(2);
   rb.push(3);
@@ -53,7 +53,7 @@ void find_algorithm() {
 }
 
 void equal_algorithm() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   rb.push(4);
   rb.push(5);
   rb.push(6);
@@ -63,7 +63,7 @@ void equal_algorithm() {
 }
 
 void iterator_traits_check() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   using it = decltype(rb.begin());
 
   static_assert(std::is_same_v<typename std::iterator_traits<it>::iterator_category,
@@ -71,7 +71,7 @@ void iterator_traits_check() {
 }
 
 void range_construct_and_sort_copy() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
   rb.push(5);
   rb.push(1);
   rb.push(3);
@@ -85,7 +85,7 @@ void range_construct_and_sort_copy() {
 }
 
 void iterator_distance_loop() {
-  RingBuffer<int, 5> rb;
+  RingBuffer<int, 8> rb;
 
   rb.push(1);
   rb.push(2);

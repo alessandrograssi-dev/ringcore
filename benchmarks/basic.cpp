@@ -47,18 +47,20 @@ template <typename T> inline void consume_value(const T& value) {
 
 template <typename T> void bench_ringbuffer_batch_discard() {
   RingBuffer<T, BUFFER_SIZE> buffer;
+  const size_t fill_count = buffer.max_size();
   size_t sink = 0;
 
   auto start = bench_clock::now();
 
   for (size_t r = 0; r < ROUNDS; ++r) {
     // fill buffer
-    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+    for (size_t i = 0; i < fill_count; ++i)
       buffer.push(T{});
 
     // drain buffer
-    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
-      sink += static_cast<size_t>(buffer.pop_discard());
+    for (size_t i = 0; i < fill_count; ++i) {
+      buffer.pop_discard();
+      ++sink;
     }
   }
 
@@ -72,15 +74,16 @@ template <typename T> void bench_ringbuffer_batch_discard() {
 
 template <typename T> void bench_deque_batch_discard() {
   std::deque<T> dq;
+  const size_t fill_count = RingBuffer<T, BUFFER_SIZE>{}.max_size();
   size_t sink = 0;
 
   auto start = bench_clock::now();
 
   for (size_t r = 0; r < ROUNDS; ++r) {
-    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+    for (size_t i = 0; i < fill_count; ++i)
       dq.push_back(T{});
 
-    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
+    for (size_t i = 0; i < fill_count; ++i) {
       dq.pop_front();
       ++sink;
     }
@@ -96,17 +99,18 @@ template <typename T> void bench_deque_batch_discard() {
 
 template <typename T> void bench_vector_stack_discard() {
   std::vector<T> vec;
-  vec.reserve(BUFFER_SIZE);
+  const size_t fill_count = RingBuffer<T, BUFFER_SIZE>{}.max_size();
+  vec.reserve(fill_count);
 
   size_t sink = 0;
 
   auto start = bench_clock::now();
 
   for (size_t r = 0; r < ROUNDS; ++r) {
-    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+    for (size_t i = 0; i < fill_count; ++i)
       vec.push_back(T{});
 
-    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
+    for (size_t i = 0; i < fill_count; ++i) {
       vec.pop_back();
       ++sink;
     }
@@ -122,16 +126,17 @@ template <typename T> void bench_vector_stack_discard() {
 
 template <typename T> void bench_ringbuffer_batch_consume() {
   RingBuffer<T, BUFFER_SIZE> buffer;
+  const size_t fill_count = buffer.max_size();
   size_t sink = 0;
 
   auto start = bench_clock::now();
 
   for (size_t r = 0; r < ROUNDS; ++r) {
-    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+    for (size_t i = 0; i < fill_count; ++i)
       buffer.push(T{});
 
     T value{};
-    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
+    for (size_t i = 0; i < fill_count; ++i) {
       if (buffer.try_pop(value)) {
         consume_value(value);
         ++sink;
@@ -149,15 +154,16 @@ template <typename T> void bench_ringbuffer_batch_consume() {
 
 template <typename T> void bench_deque_batch_consume() {
   std::deque<T> dq;
+  const size_t fill_count = RingBuffer<T, BUFFER_SIZE>{}.max_size();
   size_t sink = 0;
 
   auto start = bench_clock::now();
 
   for (size_t r = 0; r < ROUNDS; ++r) {
-    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+    for (size_t i = 0; i < fill_count; ++i)
       dq.push_back(T{});
 
-    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
+    for (size_t i = 0; i < fill_count; ++i) {
       T value = std::move(dq.front());
       dq.pop_front();
       consume_value(value);
@@ -175,16 +181,17 @@ template <typename T> void bench_deque_batch_consume() {
 
 template <typename T> void bench_vector_stack_consume() {
   std::vector<T> vec;
-  vec.reserve(BUFFER_SIZE);
+  const size_t fill_count = RingBuffer<T, BUFFER_SIZE>{}.max_size();
+  vec.reserve(fill_count);
   size_t sink = 0;
 
   auto start = bench_clock::now();
 
   for (size_t r = 0; r < ROUNDS; ++r) {
-    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+    for (size_t i = 0; i < fill_count; ++i)
       vec.push_back(T{});
 
-    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
+    for (size_t i = 0; i < fill_count; ++i) {
       T value = std::move(vec.back());
       vec.pop_back();
       consume_value(value);
@@ -202,8 +209,9 @@ template <typename T> void bench_vector_stack_consume() {
 
 template <typename T> void bench_ringbuffer_iteration() {
   RingBuffer<T, BUFFER_SIZE> buffer;
+  const size_t fill_count = buffer.max_size();
 
-  for (size_t i = 0; i < BUFFER_SIZE; ++i)
+  for (size_t i = 0; i < fill_count; ++i)
     buffer.push(T{});
 
   size_t sink = 0;

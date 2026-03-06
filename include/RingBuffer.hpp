@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cassert>
 #include <iterator>
+#include <cmath>
 
 template <typename RingBufferType> class RingBufferIterator {
 public:
@@ -26,12 +27,12 @@ public:
   using iterator_category = std::bidirectional_iterator_tag;
 
 public:
-  constexpr RingBufferIterator(pointer start_buffer, pointer ptr, size_type capacity)
-      : m_start_buffer(start_buffer), m_ptr(ptr), m_capacity(capacity) {}
+  constexpr RingBufferIterator(pointer start_buffer, pointer ptr, size_type storage)
+      : m_start_buffer(start_buffer), m_ptr(ptr), m_storage_size(storage) {}
 
   RingBufferIterator& operator++() {
     assert(m_ptr != nullptr && m_start_buffer != nullptr);
-    if (++m_ptr == m_start_buffer + m_capacity)
+    if (++m_ptr == m_start_buffer + m_storage_size)
       m_ptr = m_start_buffer;
     return *this;
   }
@@ -45,7 +46,7 @@ public:
   RingBufferIterator& operator--() {
     assert(m_ptr != nullptr && m_start_buffer != nullptr);
     if (--m_ptr < m_start_buffer)
-      m_ptr = m_start_buffer + m_capacity - 1;
+      m_ptr = m_start_buffer + m_storage_size - 1;
     return *this;
   }
 
@@ -77,11 +78,12 @@ public:
 private:
   pointer m_start_buffer;
   pointer m_ptr;
-  size_type m_capacity;
+  size_type m_storage_size;
 };
 
 template <typename T, std::size_t N> class RingBuffer {
-  static_assert(N > 0);
+  static_assert(N > 0, "RingBuffer: capacity must be bigger than 0");
+  static_assert((N & (N-1)) == 0, "RingBuffer: capacity must be a power of 2");
 
 public:
   using value_type = T;
@@ -123,18 +125,27 @@ public:
   }
 
   [[nodiscard]] inline constexpr bool is_full() const noexcept {
-    return m_size == N;
+    return m_size == max_size();
   }
 
   template <typename U>
     requires std::assignable_from<T&, U&&>
-  bool push(U&& value) {
+  void push(U&& value) {
     if (is_full())
-      return false;
+      throw std::out_of_range("RingBuffer is full");
 
     m_data[m_tail] = std::forward<U>(value);
     _incr_tail();
-    return true;
+  }
+
+  template <typename U>
+    requires std::assignable_from<T&, U&&>
+  void push_overwrite(U&& value) noexcept {
+    const bool was_full = is_full();
+    m_data[m_tail] = std::forward<U>(value);
+    _incr_tail();
+    if (was_full) 
+      _incr_head();
   }
 
   value_type pop() {
@@ -146,7 +157,53 @@ public:
     return value;
   }
 
-  bool pop_discard() noexcept {
+  void pop_discard() {
+    if (empty())
+      throw std::out_of_range("RingBuffer is empty");
+
+    _incr_head();
+  }
+
+  // try_* API
+  bool try_pop(value_type& out) noexcept(noexcept(out = std::move(m_data[m_head]))) {
+    if (empty())
+      return false;
+
+    out = std::move(m_data[m_head]);
+    _incr_head();
+    return true;
+  }
+
+  bool try_push(const_reference value) noexcept(noexcept(m_data[m_tail] = value)) {
+    if (is_full())
+      return false;
+
+    m_data[m_tail] = value;
+    _incr_tail();
+    return true;
+  }
+
+  bool try_push(value_type&& value) noexcept(noexcept(m_data[m_tail] = std::move(value))) {
+    if (is_full())
+      return false;
+
+    m_data[m_tail] = std::move(value);
+    _incr_tail();
+    return true;
+  }
+
+  template <typename... Args>
+  bool try_emplace_back(Args&&... args)
+      noexcept(noexcept(m_data[m_tail] = value_type(std::forward<Args>(args)...))) {
+    if (is_full())
+      return false;
+
+    m_data[m_tail] = value_type(std::forward<Args>(args)...);
+    _incr_tail();
+    return true;
+  }
+
+  bool try_pop_discard() noexcept {
     if (empty())
       return false;
 
@@ -154,13 +211,50 @@ public:
     return true;
   }
 
-  bool try_pop(value_type& out) {
+  bool try_peek(const_pointer& out) const noexcept {
     if (empty())
       return false;
 
-    out = std::move(m_data[m_head]);
-    _incr_head();
+    out = m_data.data() + m_head;
     return true;
+  }
+
+  bool try_front(pointer& out) noexcept {
+    if (empty())
+      return false;
+    out = m_data.data() + m_head;
+    return true;
+  }
+
+  bool try_front(const_pointer& out) const noexcept {
+    if (empty())
+      return false;
+    out = m_data.data() + m_head;
+    return true;
+  }
+  bool try_back(pointer& out) noexcept {
+    if (empty())
+      return false;
+
+    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
+    out = m_data.data() + idx;
+    return true;
+  }
+
+  bool try_back(const_pointer& out) const noexcept {
+    if (empty())
+      return false;
+
+    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
+    out = m_data.data() + idx;
+    return true;
+  }
+
+  reference peek() {
+    if (empty())
+      throw std::out_of_range("RingBuffer is empty");      
+
+    return m_data[m_head];
   }
 
   const_reference peek() const {
@@ -170,24 +264,20 @@ public:
     return m_data[m_head];
   }
 
-  [[nodiscard]] constexpr static size_type capacity() noexcept {
-    return N;
-  }
-
   [[nodiscard]] inline constexpr size_type size() const noexcept {
     return m_size;
   }
 
   [[nodiscard]] constexpr size_type max_size() const noexcept {
-    return N;
+    return sm_storage_size-1;
   }
 
   [[nodiscard]] constexpr iterator begin() noexcept {
-    return iterator(m_data.data(), &m_data[m_head], storage_size);
+    return iterator(m_data.data(), &m_data[m_head], sm_storage_size);
   }
 
   [[nodiscard]] constexpr iterator end() noexcept {
-    return iterator(m_data.data(), &m_data[m_tail], storage_size);
+    return iterator(m_data.data(), &m_data[m_tail], sm_storage_size);
   }
 
   [[nodiscard]] constexpr const_iterator begin() const noexcept {
@@ -199,11 +289,11 @@ public:
   }
 
   [[nodiscard]] constexpr const_iterator cbegin() const noexcept {
-    return const_iterator(m_data.data(), &m_data[m_head], storage_size);
+    return const_iterator(m_data.data(), &m_data[m_head], sm_storage_size);
   }
 
   [[nodiscard]] constexpr const_iterator cend() const noexcept {
-    return const_iterator(m_data.data(), &m_data[m_tail], storage_size);
+    return const_iterator(m_data.data(), &m_data[m_tail], sm_storage_size);
   }
 
   [[nodiscard]] constexpr reverse_iterator rbegin() noexcept {
@@ -230,27 +320,25 @@ public:
     return std::reverse_iterator(cbegin());
   }
 
-  template <typename... Args> bool emplace_back(Args&&... args) {
+  template <typename... Args> void emplace_back(Args&&... args) {
     if (is_full())
-      return false;
+      throw std::out_of_range("RingBuffer is full");
 
     m_data[m_tail] = value_type(std::forward<Args>(args)...);
     _incr_tail();
-    return true;
   }
 
-  template <typename... Args> bool emplace_front(Args&&... args) {
+  template <typename... Args> void emplace_front(Args&&... args) {
     if (is_full())
-      return false;
+      throw std::out_of_range("RingBuffer is full");
 
     if (m_head == 0) {
-      m_head = storage_size - 1;
+      m_head = sm_storage_size - 1;
     } else {
       --m_head;
     }
     m_data[m_head] = value_type(std::forward<Args>(args)...);
     ++m_size;
-    return true;
   }
 
   void clear() noexcept {
@@ -275,7 +363,7 @@ public:
     if (empty())
       throw std::out_of_range("The RingBuffer is empty");
 
-    index_type idx = (m_tail + storage_size - 1) % storage_size;
+    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
     return m_data[idx];
   }
 
@@ -283,30 +371,30 @@ public:
     if (empty())
       throw std::out_of_range("The RingBuffer is empty");
 
-    index_type idx = (m_tail + storage_size - 1) % storage_size;
+    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
     return m_data[idx];
   }
 
   constexpr const_reference operator[](index_type i) const {
     assert(i < size());
-    return m_data[(m_head + i) % storage_size];
+    return m_data[(m_head + i) & sm_bitmask];
   }
 
   constexpr reference operator[](index_type i) {
     assert(i < size());
-    return m_data[(m_head + i) % storage_size];
+    return m_data[(m_head + i) & sm_bitmask];
   }
 
   const_reference at(index_type i) const {
     if (i >= size())
       throw std::out_of_range("RingBuffer: index out of range");
-    return m_data[(m_head + i) % storage_size];
+    return m_data[(m_head + i) & sm_bitmask];
   }
 
   reference at(index_type i) {
     if (i >= size())
       throw std::out_of_range("RingBuffer: index out of range");
-    return m_data[(m_head + i) % storage_size];
+    return m_data[(m_head + i) & sm_bitmask];
   }
 
   [[nodiscard]] constexpr bool contains(const T& value) const {
@@ -321,6 +409,7 @@ public:
     std::swap(m_data, other.m_data);
     std::swap(m_head, other.m_head);
     std::swap(m_tail, other.m_tail);
+    std::swap(m_size, other.m_size);
   }
 
   friend void swap(RingBuffer& a, RingBuffer& b) noexcept {
@@ -328,28 +417,25 @@ public:
   }
 
 private:
-  static constexpr size_type storage_size = N + 1;
-  std::array<T, storage_size> m_data;
-  index_type m_head = 0;
-  index_type m_tail = 0;
-  size_type m_size = 0;
+  static constexpr size_type sm_storage_size = N;
+  static constexpr size_type sm_bitmask = N-1;
+  std::array<T, sm_storage_size> m_data;
+  alignas(64) index_type m_head = 0;
+  alignas(64) index_type m_tail = 0;
+  alignas(64) size_type  m_size = 0;
 
 private:
   [[nodiscard]] constexpr static size_type storage() noexcept {
-    return storage_size;
+    return sm_storage_size;
   }
 
   constexpr void _incr_tail() noexcept {
-    ++m_tail;
-    if (m_tail == storage_size)
-      m_tail = 0;
+    m_tail = (m_tail + 1) & sm_bitmask;
     ++m_size;
   }
 
   constexpr void _incr_head() noexcept {
-    ++m_head;
-    if (m_head == storage_size)
-      m_head = 0;
+    m_head = (m_head + 1) & sm_bitmask;
     --m_size;
   }
 };
