@@ -204,13 +204,19 @@ public:
   }
 
   /** @brief Returns the number of stored elements. */
-  [[nodiscard]] inline constexpr size_type size() const noexcept { return m_size; }
+  [[nodiscard]] inline constexpr size_type size() const noexcept {
+    return m_size;
+  }
 
   /** @brief Returns the maximum number of storable elements. */
-  [[nodiscard]] constexpr size_type max_size() const noexcept { return sm_storage_size - 1; }
+  [[nodiscard]] constexpr size_type max_size() const noexcept {
+    return sm_storage_size - 1;
+  }
 
   /** @brief Returns true if the buffer reached its effective capacity. */
-  [[nodiscard]] inline constexpr bool is_full() const noexcept { return m_size == max_size(); }
+  [[nodiscard]] inline constexpr bool is_full() const noexcept {
+    return m_size == max_size();
+  }
 
   /**
    * @brief Returns the first logical element.
