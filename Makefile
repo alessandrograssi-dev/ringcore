@@ -1,5 +1,5 @@
 
-.PHONY: all configure build test bench run-bench clean
+.PHONY: all configure build test bench run-bench docs clean delete-docs
 
 all: build
 
@@ -19,5 +19,22 @@ bench: configure
 run-bench: bench
 	./build/benchmarks/bench_basic
 
+docs:
+	@if ! command -v doxygen >/dev/null 2>&1; then \
+		echo "doxygen not found. Install it first (e.g. sudo apt install doxygen)."; \
+		exit 1; \
+	fi
+	@mkdir -p docs
+	@echo "Generating Doxyfile for doc output..."
+	@doxygen -g Doxyfile >/dev/null
+	@sed -i 's|^OUTPUT_DIRECTORY .*|OUTPUT_DIRECTORY = docs|' Doxyfile
+	@sed -i 's|^INPUT .*|INPUT = include README.md|' Doxyfile
+	@sed -i 's|^RECURSIVE .*|RECURSIVE = YES|' Doxyfile
+	@sed -i 's|^GENERATE_LATEX .*|GENERATE_LATEX = NO|' Doxyfile
+	doxygen Doxyfile
+
 clean:
 	rm -rf build
+
+delete-docs:
+	rm -rf docs
