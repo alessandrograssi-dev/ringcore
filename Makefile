@@ -27,8 +27,11 @@ docs:
 	@mkdir -p docs
 	@echo "Generating Doxyfile for doc output..."
 	@doxygen -g Doxyfile >/dev/null
+	@sed -i 's|^PROJECT_NAME .*|PROJECT_NAME = "ringcore"|' Doxyfile
 	@sed -i 's|^OUTPUT_DIRECTORY .*|OUTPUT_DIRECTORY = docs|' Doxyfile
 	@sed -i 's|^INPUT .*|INPUT = include README.md|' Doxyfile
+	@sed -i 's|^USE_MDFILE_AS_MAINPAGE .*|USE_MDFILE_AS_MAINPAGE = README.md|' Doxyfile
+	@sed -i 's|^MARKDOWN_SUPPORT .*|MARKDOWN_SUPPORT = YES|' Doxyfile
 	@sed -i 's|^RECURSIVE .*|RECURSIVE = YES|' Doxyfile
 	@sed -i 's|^GENERATE_LATEX .*|GENERATE_LATEX = NO|' Doxyfile
 	doxygen Doxyfile
