@@ -1,7 +1,6 @@
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://isocpp.org/std/the-standard)
 [![CMake](https://img.shields.io/badge/CMake-3.31%2B-064F8C.svg)](https://cmake.org/)
 [![Header-only](https://img.shields.io/badge/library-header--only-success.svg)](https://github.com/alessandrograssi-dev/ringcore)
-[![GitHub stars](https://img.shields.io/github/stars/alessandrograssi-dev/ringcore?style=social)](https://github.com/alessandrograssi-dev/ringcore/stargazers)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alessandrograssi-dev/ringcore)](https://github.com/alessandrograssi-dev/ringcore/commits/main)
 [![GitHub repo size](https://img.shields.io/github/repo-size/alessandrograssi-dev/ringcore)](https://github.com/alessandrograssi-dev/ringcore)
 [![Build and Validate](https://github.com/alessandrograssi-dev/ringcore/actions/workflows/build.yml/badge.svg)](https://github.com/alessandrograssi-dev/ringcore/actions/workflows/build.yml)
