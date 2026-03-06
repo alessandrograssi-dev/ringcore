@@ -1,0 +1,79 @@
+name: Build and Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test-bench-format:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake clang-format g++ make
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install clang-format
+
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-make
+            mingw-w64-ucrt-x86_64-clang-tools-extra
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: make
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make
+
+      - name: Run tests (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: make test
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make test
+
+      - name: Run benchmarks (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: make run-bench
+
+      - name: Run benchmarks (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make run-bench
+
+      - name: Check formatting (clang-format, Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          find include tests benchmarks -type f \( -name '*.hpp' -o -name '*.cpp' \) -print0 \
+            | xargs -0 clang-format --dry-run --Werror
+
+      - name: Check formatting (clang-format, Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          find include tests benchmarks -type f \( -name '*.hpp' -o -name '*.cpp' \) -print0 \
+            | xargs -0 clang-format --dry-run --Werror

@@ -85,6 +85,40 @@ For each data type (`int`, `std::string`, `LargeObject`), it runs two push/pop m
 
 `RingBuffer` uses effective logical capacity `N-1`, so benchmark loops use `buffer.max_size()` for fair fill/drain counts across containers.
 
+### Benchmark configuration
+
+From `benchmarks/basic.cpp`:
+
+- `BUFFER_SIZE = 1024`
+- Effective ring `fill_count = buffer.max_size() = 1023`
+- `ROUNDS = 1'000'000` for batch push/pop benchmarks
+- `LOOPS = 200'000` for iterator benchmark
+- Clock source: `std::chrono::steady_clock`
+- Data types tested:
+	- `int`
+	- `std::string`
+	- `LargeObject` (`int data[64]`)
+
+The benchmark includes two push/pop modes:
+
+- **Discard pop**: pops without payload consumption (container overhead focus)
+- **Consume pop**: pops and passes values to `consume_value(...)` to keep payload work observable
+
+### Benchmark environment
+
+Measured on this machine:
+
+| Item | Value |
+|---|---|
+| OS | Linux 6.14.0-37-generic x86_64 |
+| CPU | 13th Gen Intel(R) Core(TM) i9-13900H |
+| Cores / Threads | 14 cores, 20 threads |
+| Max CPU freq | 5400 MHz |
+| RAM | 30 GiB |
+| Compiler | `c++ (Ubuntu 14.2.0-19ubuntu2) 14.2.0` |
+
+Because this is a micro-benchmark, results can vary with thermal/power state, background load, and CPU scaling.
+
 ### Latest benchmark results
 
 #### INT
@@ -143,6 +177,45 @@ Constraints:
 - `N` must be power of two
 - effective logical capacity is `N - 1`
 
+## Memory layout
+
+Ring buffer storage is fixed and contiguous (size `N`).
+
+### Base storage view
+
+```text
+Storage indices:
+[0][1][2][3][4][5][6][7]
+```
+
+- `head` points to the first logical element.
+- `tail` points to the next insertion position.
+- Logical active range is `[head ... tail)` (with wrap-around).
+
+### Non-wrapped example
+
+```text
+Storage:
+[0][1][2][3][4][5][6][7]
+	 ^        ^
+	head     tail
+
+Logical elements: [1, 2, 3]
+```
+
+### Wrapped example
+
+```text
+Storage:
+[0][1][2][3][4][5][6][7]
+		 ^              ^
+		tail           head
+
+Logical elements: [6, 7, 0, 1]
+```
+
+In wrapped state, iteration still follows logical order starting at `head` and continuing circularly until `tail`.
+
 ### Throwing operations
 
 - `push(...)` throws if full
@@ -192,6 +265,41 @@ int main() {
 	}
 
 	return 0;
+}
+```
+
+## STL algorithm examples
+
+`RingBuffer` iterators are compatible with common STL algorithms.
+
+```cpp
+#include <algorithm>
+#include <numeric>
+#include <vector>
+#include "RingBuffer.hpp"
+
+int main() {
+	RingBuffer<int, 8> rb;
+
+	rb.push(10);
+	rb.push(42);
+	rb.push(5);
+	rb.push(7);
+
+	// std::find
+	auto it = std::find(rb.begin(), rb.end(), 42);
+	if (it != rb.end()) {
+		// found 42
+	}
+
+	// std::accumulate
+	int sum = std::accumulate(rb.begin(), rb.end(), 0);
+
+	// std::sort on a copied range
+	std::vector<int> sorted(rb.begin(), rb.end());
+	std::sort(sorted.begin(), sorted.end());
+
+	return sum;
 }
 ```
 

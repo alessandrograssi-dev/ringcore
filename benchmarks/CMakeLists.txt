@@ -9,3 +9,4 @@ target_include_directories(bench_basic
 
 target_compile_features(bench_basic PRIVATE cxx_std_20)
 target_compile_options(bench_basic PRIVATE -O3 -march=native)
+target_compile_definitions(bench_basic PRIVATE NDEBUG)
