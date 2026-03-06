@@ -616,9 +616,9 @@ private:
   static constexpr size_type sm_storage_size = N;
   static constexpr size_type sm_bitmask = N - 1;
   std::array<T, sm_storage_size> m_data;
-  alignas(64) index_type m_head = 0;
-  alignas(64) index_type m_tail = 0;
-  alignas(64) size_type m_size = 0;
+  index_type m_head = 0;
+  index_type m_tail = 0;
+  size_type m_size = 0;
 
 private:
   [[nodiscard]] constexpr static size_type storage() noexcept {
