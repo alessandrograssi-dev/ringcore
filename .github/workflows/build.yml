@@ -31,16 +31,18 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
+          msystem: UCRT64
           update: true
           install: >-
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-clang-tools-extra
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
-        run: cmake -S . -B build -G "Unix Makefiles"
+        run: cmake -S . -B build -G Ninja
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'
