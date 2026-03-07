@@ -22,6 +22,7 @@ The main implementations are in:
 
 ## Table of Contents
 
+- [Why Two Headers](#why-two-headers)
 - [Strong points](#strong-points)
 - [Requirements](#requirements)
 - [Build](#build)
@@ -43,6 +44,17 @@ The main implementations are in:
 - [Minimal usage](#minimal-usage)
 - [STL algorithm examples](#stl-algorithm-examples)
 - [Project layout](#project-layout)
+
+## Why Two Headers
+
+The codebase intentionally keeps two implementations instead of a single unified abstraction:
+
+- `include/RingBuffer.hpp`: optimized path for default-constructible/trivial-friendly scenarios.
+- `include/RingBufferNonDefaultConstructible.hpp`: compatibility path for non-default-constructible types.
+
+This duplication is a deliberate performance choice. In benchmark and profiling experiments, the default-constructor-oriented implementation is consistently faster, and attempts to merge both code paths behind additional abstraction layers resulted in worse performance.
+
+So the project favors explicit specialization over unification to keep the fast path as efficient as possible while still providing support for non-default-constructible element types.
 
 
 
