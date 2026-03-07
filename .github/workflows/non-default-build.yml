@@ -1,0 +1,85 @@
+name: Non-Default RingBuffer CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test-bench-non-default:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake clang-format g++ make
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install clang-format
+
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-clang-tools-extra
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: cmake -S . -B build -G Ninja
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: make
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: cmake --build build
+
+      - name: Run all tests (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: make test
+
+      - name: Run all tests (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Run non-default comparison test (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: ./build/tests/non_default_comparison_tests
+
+      - name: Run non-default comparison test (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: ./build/tests/non_default_comparison_tests
+
+      - name: Run non-default benchmark (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake --build build --target bench_non_default_compare
+          ./build/benchmarks/bench_non_default_compare
+
+      - name: Run non-default benchmark (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build build --target bench_non_default_compare
+          ./build/benchmarks/bench_non_default_compare

@@ -13,7 +13,10 @@ Header-only, fixed-size ring buffer in C++20 with:
 - throwing APIs and non-throwing `try_*` APIs
 - tests, micro-benchmarks, and Doxygen docs generation
 
-The main implementation is in `include/RingBuffer.hpp`.
+The main implementations are in:
+
+- `include/RingBuffer.hpp` (default-constructible storage path)
+- `include/RingBufferNonDefaultConstructible.hpp` (supports non-default-constructible types)
 
 ## Strong points
 
@@ -93,6 +96,7 @@ This runs all test targets via CTest from `tests/`:
 
 - `basic_tests.cpp`
 - `iterator_tests.cpp`
+- `non_default_comparison_tests.cpp`
 - `stl_tests.cpp`
 
 ## Run benchmark
@@ -102,6 +106,15 @@ make run-bench
 ```
 
 Benchmark source: `benchmarks/basic.cpp`.
+
+Run non-default benchmark:
+
+```bash
+cmake --build build --target bench_non_default_compare
+./build/benchmarks/bench_non_default_compare
+```
+
+Benchmark source: `benchmarks/non_default_compare.cpp`.
 
 ### Benchmark methodology
 
@@ -147,6 +160,25 @@ The benchmark includes two push/pop modes:
 - **Discard pop**: pops without payload consumption (container overhead focus)
 - **Consume pop**: pops and passes values to `consume_value(...)` to keep payload work observable
 
+### Non-default benchmark configuration
+
+From `benchmarks/non_default_compare.cpp`:
+
+- `BUFFER_SIZE = 1024`
+- Effective ring `fill_count = buffer.max_size() = 1023`
+- `ROUNDS = 1'000'000` for batch push/pop benchmarks
+- `LOOPS = 200'000` for iterator benchmark
+- Clock source: `std::chrono::steady_clock`
+- Data types tested:
+	- `NonDefaultBlob<16>`
+	- `NonDefaultBlob<64>`
+	- `NonDefaultBlob<256>`
+
+This benchmark compares `RingBufferNonDefaultConstructible` against:
+
+- `std::deque` (queue-like push_back/pop_front)
+- `std::vector` used as a stack (push_back/pop_back)
+
 ### Benchmark environment
 
 Measured on this machine:
@@ -187,6 +219,32 @@ Because this is a micro-benchmark, results can vary with thermal/power state, ba
 | Batch discard pop | 6.76861 | 18.3302 | 9.25165 |
 | Batch consume pop | 9.66389 | 21.1863 | 11.2808 |
 | Iteration (RingBuffer only) | 0.0585418 | - | - |
+
+### Latest benchmark results (RingBufferNonDefaultConstructible)
+
+#### NON-DEFAULT_BLOB16
+
+| Mode | RingBufferNonDefaultConstructible (s) | std::deque (s) | std::vector stack (s) |
+|---|---:|---:|---:|
+| Batch discard pop | 8.34699 | 8.93915 | 7.60881 |
+| Batch consume pop | 8.9921 | 8.87878 | 7.58946 |
+| Iteration (RingBuffer only) | 0.101687 | - | - |
+
+#### NON-DEFAULT_BLOB64
+
+| Mode | RingBufferNonDefaultConstructible (s) | std::deque (s) | std::vector stack (s) |
+|---|---:|---:|---:|
+| Batch discard pop | 3.94942 | 6.86327 | 3.83647 |
+| Batch consume pop | 4.59373 | 7.11657 | 3.26814 |
+| Iteration (RingBuffer only) | 0.146314 | - | - |
+
+#### NON-DEFAULT_BLOB256
+
+| Mode | RingBufferNonDefaultConstructible (s) | std::deque (s) | std::vector stack (s) |
+|---|---:|---:|---:|
+| Batch discard pop | 10.017 | 29.3278 | 9.32272 |
+| Batch consume pop | 10.7661 | 29.9914 | 10.0828 |
+| Iteration (RingBuffer only) | 0.147358 | - | - |
 
 ## Generate documentation
 
@@ -351,11 +409,14 @@ int main() {
 ```text
 include/
 	RingBuffer.hpp
+	RingBufferNonDefaultConstructible.hpp
 tests/
 	basic_tests.cpp
 	iterator_tests.cpp
+	non_default_comparison_tests.cpp
 	stl_tests.cpp
 benchmarks/
 	basic.cpp
+	non_default_compare.cpp
 ```
 
