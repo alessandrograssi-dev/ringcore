@@ -3,7 +3,9 @@
 [![Header-only](https://img.shields.io/badge/library-header--only-success.svg)](https://github.com/alessandrograssi-dev/ringcore)
 [![GitHub last commit](https://img.shields.io/github/last-commit/alessandrograssi-dev/ringcore)](https://github.com/alessandrograssi-dev/ringcore/commits/main)
 [![GitHub repo size](https://img.shields.io/github/repo-size/alessandrograssi-dev/ringcore)](https://github.com/alessandrograssi-dev/ringcore)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Build and Validate](https://github.com/alessandrograssi-dev/ringcore/actions/workflows/build.yml/badge.svg)](https://github.com/alessandrograssi-dev/ringcore/actions/workflows/build.yml)
+[![Non-Default RingBuffer CI](https://github.com/alessandrograssi-dev/ringcore/actions/workflows/non-default-build.yml/badge.svg)](https://github.com/alessandrograssi-dev/ringcore/actions/workflows/non-default-build.yml)
 # ringcore
 
 Header-only, fixed-size ring buffer in C++20 with:
@@ -17,6 +19,32 @@ The main implementations are in:
 
 - `include/RingBuffer.hpp` (default-constructible storage path)
 - `include/RingBufferNonDefaultConstructible.hpp` (supports non-default-constructible types)
+
+## Table of Contents
+
+- [Strong points](#strong-points)
+- [Requirements](#requirements)
+- [Build](#build)
+- [Compile on Linux / macOS / Windows](#compile-on-linux--macos--windows)
+- [Run tests](#run-tests)
+- [Run benchmark](#run-benchmark)
+- [Benchmark methodology](#benchmark-methodology)
+- [Benchmark configuration](#benchmark-configuration)
+- [Non-default benchmark configuration](#non-default-benchmark-configuration)
+- [Benchmark environment](#benchmark-environment)
+- [Latest benchmark results](#latest-benchmark-results)
+- [Latest benchmark results (RingBufferNonDefaultConstructible)](#latest-benchmark-results-ringbuffernondefaultconstructible)
+- [Generate documentation](#generate-documentation)
+- [API overview](#api-overview)
+- [Memory layout](#memory-layout)
+- [Throwing operations](#throwing-operations)
+- [Non-throwing operations](#non-throwing-operations)
+- [Iterators](#iterators)
+- [Minimal usage](#minimal-usage)
+- [STL algorithm examples](#stl-algorithm-examples)
+- [Project layout](#project-layout)
+
+
 
 ## Strong points
 
