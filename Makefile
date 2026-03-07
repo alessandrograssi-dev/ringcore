@@ -36,6 +36,9 @@ docs:
 	@sed -i 's|^GENERATE_LATEX .*|GENERATE_LATEX = NO|' Doxyfile
 	doxygen Doxyfile
 
+format:
+	clang-format -i $$(find . -name "*.cpp" -o -name "*.hpp")
+
 clean:
 	rm -rf build
 

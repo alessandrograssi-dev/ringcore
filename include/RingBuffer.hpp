@@ -185,6 +185,8 @@ public:
 
   /**
    * @brief Constructs a ring buffer pre-filled with @p size copies of @p value.
+   * @param size Number of elements to insert initially.
+   * @param value Value copied into each inserted slot.
    * @throws std::out_of_range if @p size is greater than storage size N.
    */
   explicit RingBuffer(size_type size, const_reference value) : RingBuffer() {
@@ -291,6 +293,8 @@ public:
 
   /**
    * @brief Unchecked indexed access relative to logical head.
+   * @param i Logical index in the range [0, size()).
+   * @return Const reference to the element at logical index @p i.
    * @pre i < size()
    */
   constexpr const_reference operator[](index_type i) const {
@@ -300,6 +304,8 @@ public:
 
   /**
    * @brief Unchecked indexed access relative to logical head.
+   * @param i Logical index in the range [0, size()).
+   * @return Mutable reference to the element at logical index @p i.
    * @pre i < size()
    */
   constexpr reference operator[](index_type i) {
@@ -309,6 +315,8 @@ public:
 
   /**
    * @brief Checked indexed access relative to logical head.
+   * @param i Logical index in the range [0, size()).
+   * @return Const reference to the element at logical index @p i.
    * @throws std::out_of_range if i >= size().
    */
   const_reference at(index_type i) const {
@@ -319,6 +327,8 @@ public:
 
   /**
    * @brief Checked indexed access relative to logical head.
+   * @param i Logical index in the range [0, size()).
+   * @return Mutable reference to the element at logical index @p i.
    * @throws std::out_of_range if i >= size().
    */
   reference at(index_type i) {
@@ -329,6 +339,8 @@ public:
 
   /**
    * @brief Pushes one element at the logical tail.
+   * @tparam U Source value category/type.
+   * @param value Value to copy/move into the tail slot.
    * @throws std::out_of_range if the buffer is full.
    */
   template <typename U>
@@ -343,6 +355,8 @@ public:
 
   /**
    * @brief Pushes one element, overwriting oldest one when full.
+   * @tparam U Source value category/type.
+   * @param value Value to copy/move into the tail slot.
    */
   template <typename U>
     requires std::assignable_from<T&, U&&>
@@ -356,6 +370,8 @@ public:
 
   /**
    * @brief Constructs an element at the logical tail.
+   * @tparam Args Constructor argument types for T.
+   * @param args Constructor arguments forwarded to T.
    * @throws std::out_of_range if the buffer is full.
    */
   template <typename... Args> void emplace_back(Args&&... args) {
@@ -368,6 +384,8 @@ public:
 
   /**
    * @brief Constructs an element at the logical head (front insertion).
+   * @tparam Args Constructor argument types for T.
+   * @param args Constructor arguments forwarded to T.
    * @throws std::out_of_range if the buffer is full.
    */
   template <typename... Args> void emplace_front(Args&&... args) {
@@ -416,6 +434,7 @@ public:
 
   /**
    * @brief Attempts to pop one element into @p out.
+   * @param[out] out Destination for the popped value when successful.
    * @return true if successful, false if empty.
    */
   bool try_pop(value_type& out) noexcept(noexcept(out = std::move(m_data[m_head]))) {
@@ -429,6 +448,7 @@ public:
 
   /**
    * @brief Attempts to push a copy of @p value.
+   * @param value Value to copy into the tail slot.
    * @return true if successful, false if full.
    */
   bool try_push(const_reference value) noexcept(noexcept(m_data[m_tail] = value)) {
@@ -442,6 +462,7 @@ public:
 
   /**
    * @brief Attempts to push a moved value.
+   * @param value Value to move into the tail slot.
    * @return true if successful, false if full.
    */
   bool try_push(value_type&& value) noexcept(noexcept(m_data[m_tail] = std::move(value))) {
@@ -455,6 +476,8 @@ public:
 
   /**
    * @brief Attempts to emplace one element at tail.
+   * @tparam Args Constructor argument types for T.
+   * @param args Constructor arguments forwarded to T.
    * @return true if successful, false if full.
    */
   template <typename... Args>
@@ -495,6 +518,7 @@ public:
 
   /**
    * @brief Attempts to get mutable pointer to head element.
+   * @param[out] out Pointer to head element on success.
    * @return true if successful, false if empty.
    */
   bool try_front(pointer& out) noexcept {
@@ -506,6 +530,7 @@ public:
 
   /**
    * @brief Attempts to get const pointer to head element.
+   * @param[out] out Pointer to head element on success.
    * @return true if successful, false if empty.
    */
   bool try_front(const_pointer& out) const noexcept {
@@ -517,6 +542,7 @@ public:
 
   /**
    * @brief Attempts to get mutable pointer to tail-most element.
+   * @param[out] out Pointer to last logical element on success.
    * @return true if successful, false if empty.
    */
   bool try_back(pointer& out) noexcept {
@@ -530,6 +556,7 @@ public:
 
   /**
    * @brief Attempts to get const pointer to tail-most element.
+   * @param[out] out Pointer to last logical element on success.
    * @return true if successful, false if empty.
    */
   bool try_back(const_pointer& out) const noexcept {
