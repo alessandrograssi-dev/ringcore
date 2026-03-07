@@ -66,6 +66,10 @@ public:
   using iterator_category = std::bidirectional_iterator_tag;
 
 public:
+  /** @brief Default constructor required by iterator concepts used by std adapters. */
+  constexpr RingBufferNonDefaultConstructibleIterator() noexcept
+      : m_start_buffer(nullptr), m_ptr(nullptr), m_storage_size(0) {}
+
   /**
    * @brief Constructs an iterator over the ring storage.
    * @param start_buffer Pointer to start of storage.
@@ -94,8 +98,11 @@ public:
   /** @brief Prefix decrement with wrap-around semantics. */
   RingBufferNonDefaultConstructibleIterator& operator--() {
     assert(m_ptr != nullptr && m_start_buffer != nullptr);
-    if (--m_ptr < m_start_buffer)
+    if (m_ptr == m_start_buffer) {
       m_ptr = m_start_buffer + m_storage_size - 1;
+    } else {
+      --m_ptr;
+    }
     return *this;
   }
 
