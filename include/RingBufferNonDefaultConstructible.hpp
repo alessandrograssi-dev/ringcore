@@ -27,10 +27,8 @@
 #include <concepts>
 #include <type_traits>
 #include <utility>
-#include <iostream>
 #include <cassert>
 #include <iterator>
-#include <cmath>
 
 /**
  * @brief Bidirectional iterator over ring-buffer-backed contiguous storage.
@@ -212,9 +210,7 @@ public:
   operator=(RingBufferNonDefaultConstructible&&) noexcept = default;
 
   ~RingBufferNonDefaultConstructible() {
-    while (m_size) {
-      pop_discard();
-    }
+    clear();
   }
 
   /** @brief Returns true if the buffer has no elements. */
@@ -362,12 +358,12 @@ public:
     requires std::assignable_from<T&, U&&>
   void push_overwrite(U&& value) noexcept {
     const bool was_full = is_full();
-    if (was_full)
-      destroy(m_tail);
     construct(m_tail, std::forward<U>(value));
     _incr_tail();
-    if (was_full)
+    if (was_full){
+      destroy(m_head);
       _incr_head();
+    }
   }
 
   /**

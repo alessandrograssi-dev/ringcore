@@ -25,10 +25,8 @@
 #include <concepts>
 #include <type_traits>
 #include <utility>
-#include <iostream>
 #include <cassert>
 #include <iterator>
-#include <cmath>
 
 /**
  * @brief Bidirectional iterator over ring-buffer-backed contiguous storage.
@@ -217,7 +215,7 @@ public:
 
   /** @brief Returns the maximum number of storable elements. */
   [[nodiscard]] constexpr size_type max_size() const noexcept {
-    return sm_storage_size - 1;
+    return N - 1;
   }
 
   /** @brief Returns true if the buffer reached its effective capacity. */
@@ -253,7 +251,7 @@ public:
     if (empty())
       throw std::out_of_range("The RingBuffer is empty");
 
-    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
+    index_type idx = (m_tail + N - 1) & sm_bitmask;
     return m_data[idx];
   }
 
@@ -265,7 +263,7 @@ public:
     if (empty())
       throw std::out_of_range("The RingBuffer is empty");
 
-    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
+    index_type idx = (m_tail + N - 1) & sm_bitmask;
     return m_data[idx];
   }
 
@@ -377,7 +375,7 @@ public:
       throw std::out_of_range("RingBuffer is full");
 
     if (m_head == 0) {
-      m_head = sm_storage_size - 1;
+      m_head = N - 1;
     } else {
       --m_head;
     }
@@ -525,7 +523,7 @@ public:
     if (empty())
       return false;
 
-    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
+    index_type idx = (m_tail + N - 1) & sm_bitmask;
     out = m_data.data() + idx;
     return true;
   }
@@ -538,19 +536,19 @@ public:
     if (empty())
       return false;
 
-    index_type idx = (m_tail + sm_storage_size - 1) & sm_bitmask;
+    index_type idx = (m_tail + N - 1) & sm_bitmask;
     out = m_data.data() + idx;
     return true;
   }
 
   /** @brief Returns iterator to first logical element. */
   [[nodiscard]] constexpr iterator begin() noexcept {
-    return iterator(m_data.data(), &m_data[m_head], sm_storage_size);
+    return iterator(m_data.data(), &m_data[m_head], N);
   }
 
   /** @brief Returns iterator to one-past-last logical element. */
   [[nodiscard]] constexpr iterator end() noexcept {
-    return iterator(m_data.data(), &m_data[m_tail], sm_storage_size);
+    return iterator(m_data.data(), &m_data[m_tail], N);
   }
 
   /** @brief Returns const iterator to first logical element. */
@@ -565,12 +563,12 @@ public:
 
   /** @brief Returns const iterator to first logical element. */
   [[nodiscard]] constexpr const_iterator cbegin() const noexcept {
-    return const_iterator(m_data.data(), &m_data[m_head], sm_storage_size);
+    return const_iterator(m_data.data(), &m_data[m_head], N);
   }
 
   /** @brief Returns const iterator to one-past-last logical element. */
   [[nodiscard]] constexpr const_iterator cend() const noexcept {
-    return const_iterator(m_data.data(), &m_data[m_tail], sm_storage_size);
+    return const_iterator(m_data.data(), &m_data[m_tail], N);
   }
 
   /** @brief Returns reverse iterator to last logical element. */
@@ -626,16 +624,15 @@ public:
   }
 
 private:
-  static constexpr size_type sm_storage_size = N;
   static constexpr size_type sm_bitmask = N - 1;
-  std::array<T, sm_storage_size> m_data;
+  std::array<T, N> m_data;
   index_type m_head = 0;
   index_type m_tail = 0;
   size_type m_size = 0;
 
 private:
   [[nodiscard]] constexpr static size_type storage() noexcept {
-    return sm_storage_size;
+    return N;
   }
 
   constexpr void _incr_tail() noexcept {
